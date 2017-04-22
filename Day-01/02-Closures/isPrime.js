@@ -84,6 +84,16 @@ function memoize(algoFn){
 	}
 }
 
-
-
-
+function memoize(algoFn){
+	var cache = {};
+	var fn = function(){
+		var key = JSON.stringify(arguments);
+		if (typeof cache[key] === 'undefined')
+			cache[key] = algoFn.apply(this, arguments);
+		return cache[key];
+	};
+	fn.eject = function(){
+		return cache = {};
+	};
+	return fn;
+}
