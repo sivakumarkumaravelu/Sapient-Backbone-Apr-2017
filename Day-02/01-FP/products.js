@@ -113,14 +113,27 @@ describe('Filter', function(){
 		console.table(costlyProducts);
 	});
 	describe('Generic Filter [ any list by any criteria ]', function(){
-		function filter(/*...*/){
-			//......
+		function filter(list, criteriaFn){
+			var result = [];
+			for(var index = 0; index < list.length; index++){
+				if (criteriaFn(list[index]))
+					result.push(list[index]);
+			}
+			return result;
 		}
 		describe('Understocked products [units < 50]', function(){
-
+			var understockedProductCriteria = function(product){
+				return product.units < 50;
+			};
+			var understockedProducts = filter(products, understockedProductCriteria);
+			console.table(understockedProducts);
 		});
 		describe('All stationary products', function(){
-			
+			var stationaryProductCriteria = function(product){
+				return product.category === 'stationary';
+			};
+			var stationaryProducts = filter(products, stationaryProductCriteria);
+			console.table(stationaryProducts);
 		})
 	})
 });
