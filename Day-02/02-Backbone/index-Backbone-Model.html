@@ -20,12 +20,30 @@
 		}
 	</style>
 	<script src="jquery-3.2.1.js"></script>
+	<script src="underscore.js"></script>
+	<script src="backbone.js"></script>
 	<script>
 		String.prototype.toInt = function(){
 			return parseInt(this, 10);
 		};
 
 		//Model
+		var SalaryCalculator = Backbone.Model.extend({
+			defaults : {
+				basic : 0,
+				hra : 0,
+				da : 0,
+				tax : 0,
+				salary : 0
+			},
+			calculate : function() {
+				var gross = this.get('basic') + this.get('hra') + this.get('da');
+				var net = gross * ((100-this.get('tax'))/100);
+				this.set('salary', net);
+				
+			}
+		})
+		/*
 		function SalaryCalculator(){
 			var _data = {
 				basic : 0,
@@ -68,7 +86,7 @@
 			var net = gross * ((100-this.get('tax'))/100);
 			this.set('salary', net);
 			
-		};
+		};*/
 
 		//View
 		$(function(){
@@ -97,24 +115,24 @@
 
 			
 			//React to model changes
-			calculator.onChange('basic', function(){
+			calculator.on('change:basic', function(){
 				$('#txtBasic').val(calculator.get('basic'));
 			});
 
-			calculator.onChange('hra', function(){
+			calculator.on('change:hra', function(){
 				$('#txtHra').val(calculator.get('hra'));
 			});
 
-			calculator.onChange('da', function(){
+			calculator.on('change:da', function(){
 				$('#txtDa').val(calculator.get('da'));
 			});
 
-			calculator.onChange('tax', function(){
+			calculator.on('change:tax', function(){
 				$('#rangeTax').val(calculator.get('tax'));
 				$('#spanTax').html(calculator.get('tax'));
 			});
 
-			calculator.onChange('salary', function(){
+			calculator.on('change:salary', function(){
 				$('#divResult').html(calculator.get('salary'));
 			});
 		});

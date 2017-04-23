@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Salary Calculator</title>
+	<style>
+		body{
+			margin-left: 50px;
+		}
+		.field{
+			margin-bottom: 10px;
+		}
+		label{
+			display: block;
+		}
+		#divResult{
+			color : red;
+			font-size: 22pt;
+			font-weight: bold;
+		}
+	</style>
+	<script src="jquery-3.2.1.js"></script>
+	<script src="underscore.js"></script>
+	<script src="backbone.js"></script>
+
+	<script id="calculator-template" type="text/x-template">
+		<div class="content" id="calc-view-1">
+			<div class="field">
+				<label for="">Basic :</label>
+				<input type="text" name="" id="txtBasic">
+			</div>
+			<div class="field">
+				<label for="">HRA :</label>
+				<input type="text" name="" id="txtHra">
+			</div>
+			<div class="field">
+				<label for="">DA :</label>
+				<input type="text" name="" id="txtDa">
+			</div>
+			<div class="field">
+				<label for="">Tax :</label>
+				<input type="range" name="" id="rangeTax" min="0" max="30" value="0">
+				<span id="spanTax">[Tax]</span>
+			</div>
+			<div class="field">
+				<input type="button" value="Calculate" id="btnCalculate">
+			</div>
+			<div class="field">
+				<div id="divResult">[Salary]</div>
+			</div>
+		</div>
+	</script>
+	<script>
+		String.prototype.toInt = function(){
+			return parseInt(this, 10);
+		};
+
+		//Model
+		var SalaryCalculator = Backbone.Model.extend({
+			defaults : {
+				basic : 0,
+				hra : 0,
+				da : 0,
+				tax : 0,
+				salary : 0
+			},
+			calculate : function() {
+				var gross = this.get('basic') + this.get('hra') + this.get('da');
+				var net = gross * ((100-this.get('tax'))/100);
+				this.set('salary', net);
+				
+			}
+		})
+		/*
+		function SalaryCalculator(){
+			var _data = {
+				basic : 0,
+				hra : 0,
+				da : 0,
+				tax : 0,
+				salary : 0
+			};
+
+			this.get = function(attrName){
+				return _data[attrName];
+			};
+
+			this.set = function(attrName, value){
+				if (_data[attrName] === value) return;
+				_data[attrName] = value;
+				//trigger change notification for 'attrName'
+				var callbacks = _changeListeners[attrName];
+				callbacks.forEach(function(callback){
+					if (typeof callback === 'function')
+						callback();	
+				})
+				
+			};
+
+			var _changeListeners = {
+				basic : [],
+				hra : [],
+				da : [],
+				tax : [],
+				salary : []
+			};
+
+			this.onChange = function(attrName, callback){
+				_changeListeners[attrName].push(callback);
+			}
+		}
+		SalaryCalculator.prototype.calculate = function() {
+			var gross = this.get('basic') + this.get('hra') + this.get('da');
+			var net = gross * ((100-this.get('tax'))/100);
+			this.set('salary', net);
+			
+		};*/
+
+		//View
+		var SalaryCalculatorView = Backbone.View.extend({
+			render  : function(){
+				this.$el.html($('#calculator-template').html());
+				return this;
+			},
+			initialize : function(){
+				//Reacting to model changes
+				var self = this;
+				console.log(this);
+				this.model.on('change:basic', function(){
+					$('#txtBasic', self.$el).val(self.model.get('basic'));
+				});
+
+				this.model.on('change:hra', function(){
+					$('#txtHra', self.$el).val(self.model.get('hra'));
+				});
+
+				this.model.on('change:da', function(){
+					$('#txtDa', self.$el).val(self.model.get('da'));
+				});
+
+				this.model.on('change:tax', function(){
+					$('#rangeTax', self.$el).val(self.model.get('tax'));
+					$('#spanTax', self.$el).html(self.model.get('tax'));
+				});
+
+				this.model.on('change:salary', function(){
+					$('#divResult', self.$el).html(self.model.get('salary'));
+				});
+			},
+
+			//Reacting to user actions
+			events : { 
+				'change #txtBasic' : 'onTxtBasicChange',
+				'change #txtHra' : 'onTxtHraChange',
+				'change #txtDa' : 'onTxtDaChange',
+				'change #rangeTax' : 'onRangeTaxChange',
+				'click #btnCalculate' : 'onCalculateClick'
+			},
+
+			onTxtBasicChange : function(evt){
+				this.model.set('basic', $(evt.target).val().toInt());
+			},
+			onTxtHraChange : function(evt){
+				this.model.set('hra', $(evt.target).val().toInt());
+			},
+			onTxtDaChange : function(evt){
+				this.model.set('da', $(evt.target).val().toInt());
+			},
+			onRangeTaxChange : function(evt){
+				this.model.set('tax', $(evt.target).val().toInt());
+			},
+			onCalculateClick :function(evt){
+				this.model.calculate();
+			}
+		});
+		
+
+		/*$(function(){
+			window.calculator = new SalaryCalculator();
+
+			//view-1
+			var v1 = new SalaryCalculatorView(calculator, $('#calc-view-1'))
+			
+			//
+			var v2 = new SalaryCalculatorView(calculator, $('#calc-view-2'))
+		})
+		*/
+	</script>
+</head>
+<body>
+	<h1>Salary Calculator</h1>
+	<hr>
+	
+</body>
+</html>
