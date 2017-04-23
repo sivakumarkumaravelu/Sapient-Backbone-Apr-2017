@@ -36,28 +36,133 @@
 		}
 
 	</style>
+	<script src="jquery-3.2.1.js"></script>
+	<script src="underscore.js"></script>
+	<script src="backbone.js"></script>
+	<script type="text/x-template" id="bug-item-template">
+		<li><span class="bugname">This is bug - 1</span></li>
+	</script>
+	<script type="text/x-template" id="bug-app-template">
+		 <section class="stats">
+			<span class="closed">2</span>
+			<span> / </span>
+			<span class="total">5</span>
+		</section>
+		<section class="edit">
+			<label for="">Bug Name :</label>
+			<input type="text" name="" id="txtBugName">
+			<input type="button" value="Add New" id="btnAddNew">
+			<input type="reset" value="Cancel">
+		</section>
+		<section class="list">
+			<ol>
+				
+			</ol>
+			<input type="button" value="Remove Closed" id="btnRemoveClosed">
+		</section>
+	</script>
+
+	<script>
+		var Bug = Backbone.Model.extend({
+			defaults : {
+				name : '',
+				isClosed : false
+			},
+			toggle : function(){
+				this.set('isClosed', !this.get('isClosed'));
+			}
+		})
+
+		var BugView = Backbone.View.extend({
+			render : function(){
+				this.$el.html($('#bug-item-template').html());
+				this.$('span.bugname').html(this.model.get('name'));
+				if (this.model.get('isClosed')){
+					this.$('span.bugname').addClass('closed');
+				} else {
+					this.$('span.bugname').removeClass('closed');
+				}
+				return this;
+			},
+			initialize : function(){
+				_.bindAll(this, 'render');
+				this.model.on('change', this.render);
+			},
+			events : {
+				'click .bugname' : 'toggleBug'
+			},
+			toggleBug : function(){
+				this.model.toggle();
+			}
+		});
+
+		/*function BugsCollection(){
+			var _list = [];
+			this.addNew = function(bugName){
+				var newBug = new Bug({name : bugName});
+				_list.push(newBug);
+				this.trigger('add', newBug)
+			}
+			this.getData = function(){
+				return _list;
+			};
+		}
+
+		var bugsCollection = new BugsCollection();
+		_.extend(bugsCollection, Backbone.Events);*/
+
+		var BugsCollection = Backbone.Collection.extend({
+			model : Bug,
+			closedCount : function(){
+				return this.reduce(function(result, bug){
+					return bug.get('isClosed') ? ++result : result;
+				}, 0);
+			}
+		});
+
+		var BugAppView = Backbone.View.extend({
+			addNewBug : function(newBug){
+				var bugView = new BugView({ model : newBug});
+				bugView.render().$el.appendTo(this.$('ol'));
+				this.$('.stats > span.total').html(this.collection.length);
+			},
+			updateCount(){
+				this.$('.stats > span.total').html(this.collection.length);
+				this.$('.stats > span.closed').html(this.collection.closedCount());
+
+			},
+			initialize : function(){
+				this.listenTo(this.collection, 'add', this.addNewBug);
+				this.listenTo(this.collection, 'change', this.updateCount);
+			},
+			events : {
+				'click #btnAddNew' : 'onAddNewClick'
+			},
+			onAddNewClick : function(){
+				var bugName = this.$('#txtBugName').val();
+				var newBug = new Bug({name : bugName});
+				this.collection.add(newBug);
+			},
+			render : function(){
+				this.$el.html($('#bug-app-template').html());
+				this.$('.stats > span.closed').html(this.collection.closedCount());
+				this.$('.stats > span.total').html(this.collection.length);
+				return this;
+			}
+		})
+
+		$(function(){
+			window.bugsCollection = new BugsCollection()
+			var appView = new BugAppView({ collection : bugsCollection });
+			
+			appView.render().$el.appendTo(document.body);
+		})
+
+	</script>
 </head>
 <body>
 	<h1>Bug Tracker</h1>
 	<hr>
-	<section class="stats">
-		<span class="closed">2</span>
-		<span> / </span>
-		<span>5</span>
-	</section>
-	<section class="edit">
-		<label for="">Bug Name :</label>
-		<input type="text" name="" id="txtBugName">
-		<input type="button" value="Add New" id="btnAddNew">
-		<input type="reset" value="Cancel">
-	</section>
-	<section class="list">
-		<ol>
-			<li><span class="bugname">This is bug - 1</span></li>
-			<li><span class="bugname closed">This is bug - 2</span></li>
-			<li><span class="bugname">This is bug - 3</span></li>
-		</ol>
-		<input type="button" value="Remove Closed" id="btnRemoveClosed">
-	</section>
+	
 </body>
 </html>
