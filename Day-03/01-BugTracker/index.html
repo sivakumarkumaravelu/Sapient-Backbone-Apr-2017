@@ -85,8 +85,15 @@
 				return this;
 			},
 			initialize : function(){
-				_.bindAll(this, 'render');
+				/*_.bindAll(this, 'render', 'remove');
 				this.model.on('change', this.render);
+				this.model.on('remove', this.remove);*/
+
+				this.listenTo( this.model, 'change', this.render);
+				this.listenTo( this.model, 'remove', this.remove);
+			},
+			remove : function(){
+				this.$el.remove();
 			},
 			events : {
 				'click .bugname' : 'toggleBug'
@@ -117,6 +124,14 @@
 				return this.reduce(function(result, bug){
 					return bug.get('isClosed') ? ++result : result;
 				}, 0);
+			},
+			removeClosed : function(){
+				console.log(this);
+				for(var index = this.length-1; index >= 0; index--){
+					var model = this.at(index);
+					if (model.get('isClosed'))
+						this.remove(model);
+				}
 			}
 		});
 
@@ -134,14 +149,19 @@
 			initialize : function(){
 				this.listenTo(this.collection, 'add', this.addNewBug);
 				this.listenTo(this.collection, 'change', this.updateCount);
+
 			},
 			events : {
-				'click #btnAddNew' : 'onAddNewClick'
+				'click #btnAddNew' : 'onAddNewClick',
+				'click #btnRemoveClosed' : 'onRemoveClosedClick'
 			},
 			onAddNewClick : function(){
 				var bugName = this.$('#txtBugName').val();
 				var newBug = new Bug({name : bugName});
 				this.collection.add(newBug);
+			},
+			onRemoveClosedClick : function(){
+				this.collection.removeClosed();
 			},
 			render : function(){
 				this.$el.html($('#bug-app-template').html());
